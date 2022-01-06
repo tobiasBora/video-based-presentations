@@ -52,7 +52,7 @@
     </div>
     <main style="margin: 30pt;">
       <h1>Video-Based Presentation</h1>
-      Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the one generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables. Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it can go too far for one or two frames before coming back to the good slide.
+      Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables. Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it can go too far for one or two frames before coming back to the good slide.
       <h2>Documentation</h2>
       <p>Download the html file in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 24 frames per seconds, you may also need to change the line <code>frameRate: 24,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
       <p>Then, just reload this file and click on the above button. To see the documentation and shortcuts, hover the mouse on the buttons.</p>
@@ -79,7 +79,7 @@
       // =============================
       // Edit the next line to fit your needs. This is the number of the frames to stop at.
       // =============================
-      var stopFrames = [30, 60, 90, 132];
+      var stopFrames = [30, 60, 91, 132];
 
       var video = VideoFrame({
           id: 'video',
@@ -268,11 +268,17 @@
 
       // Debug mode: display frames on pressing 'l'
       var list_frame_to_log = [];
+      function logFrame() {
+          list_frame_to_log.push(video.get());
+          console.log("List of registered frames to log: " + list_frame_to_log);
+      }
       document.addEventListener('keydown', event => {
           if (event.code === 'KeyL') {
-              list_frame_to_log.push(video.get());
-              console.log("List of registered frames to log: " + list_frame_to_log);
+              logFrame();
           }
+      });
+      document.getElementById("next-frame").addEventListener("click", event => {
+          logFrame();
       });
 
       // Display the controls when pressing C.

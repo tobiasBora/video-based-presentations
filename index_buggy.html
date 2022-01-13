@@ -38,13 +38,13 @@
     </div>
     
     <div id="controls" style="text-align:center;margin:10pt;">
-      <button id="control-restart" title="Shortcut Home: Restart the video.">Restart</button>
-      <button id="previous-slide" title="Shortcut Left: Goes to previous slide without playing the animation backward (Anyway, hard to play backward without re-encoding the video).">Previous</button>
-      <button id="next-slide" style="background-color:#00DD55;" title="Shortcut Right: Go to next slide, playing the animation. Pressing twice directly goes to the end of the animation. See Also 'Quick Next'.">Next</button>
-      <button id="play-pause" title="Shortcut P: Like Next, but pressing while playing pauses the video instead of going to the next slide." style="min-width: 4em;">Play</button>
-      <button id="quick-next-slide" title="Shorcut Shift+right: Go to the next slide without playing the animation">Quick Next</button>
-      <button id="control-end" title="Shortcut (Shift+)End: Go to the end of the presentation. Adding Shift may be useful if your browser also goes to the end of the page while pressing End.">End</button>
-      <button id="fullscreen-button" title="Shortcut F: Put the video in fullscreen (quit with Escape).">Fullscreen</button>
+      <button id="control-restart">Restart</button>      
+      <button id="previous-slide">Previous</button>
+      <button id="next-slide" style="background-color:#00DD55;">Next</button>
+      <button id="play-pause" title="Like Next, but pressing while playing pauses the video instead of going to the next slide." style="min-width: 4em;">Play</button>
+      <button id="quick-next-slide">Quick Next</button>
+      <button id="control-end" title="Go to the end of the presentation.">End</button>
+      <button id="fullscreen-button" title="Put the video in fullscreen.">Fullscreen</button>
       <button id="toggle-controls" title="Shortcut C: Toggle the controls of the video. WARNING: clicking on play in this mode will not pause the video automatically, except the first time if it was already playing.">Toggle Controls</button>
       <button id="log-current-frame" title="Shortcut L: Log the current frame number in the console (see with F12 in Firefox).">Log Current Frame</button>
       <button id="previous-frame" title="Shortcut B (Backward, sorry P is already used): Go to next frame. Practical to log frames.">Previous Frame</button>
@@ -52,19 +52,14 @@
     </div>
     <main style="margin: 30pt;">
       <h1>Video-Based Presentation</h1>
-      <p>
-        Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables.
-      </p>
-      <p>
-        Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it may go too far for one or two frames before coming back to the good slide. I try to avoid that by stopping a bit before, creating sometimes a small freeze (too avoid this issue, add a second identical slides right before the stop), but I can't guarantee that this will never fail: this problem seems hard to avoid as I asked <a href="https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop">here</a>, except maybe by cutting the video beforehand (this needs to be tested, I had bad experience with this method in the past). Note that I added a code to properly handles stops that are on consecutive frames (useful when there is no wanted transition), so this should not be too much of a problem.
-      </p>
+      Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables. Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it can go too far for one or two frames before coming back to the good slide.
       <h2>Documentation</h2>
-      <p>Download the html file (for instance via <code>File > Save</code> or <code>Ctrl-S</code> or directly using <a href="https://github.com/tobiasBora/video-based-presentations">Github</a>) in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 24 frames per seconds, you may also need to change the line <code>frameRate: 24,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
+      <p>Download the html file in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 24 frames per seconds, you may also need to change the line <code>frameRate: 24,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
       <p>Then, just reload this file and click on the above button. To see the documentation and shortcuts, hover the mouse on the buttons.</p>
       <h2>Ideas to Improve</h2>
       <ul>
-        <li>Check if reliability of frame-precise stop can be improved to avoid small freeze right before stopping.</li>
-        <li>Integrate it into existing frameworks like Reveal.js (linear slides) and Impress.js (like Prezi). Notably, could be useful to have slides with multiple videos and normal html slides containing math, javascript diagrams…</li>
+        <li>Sometimes the video plays a bit too long, so when we force the video to go to the good frame it comes back and gives a strange result (can be annoying I guess when a transition are completely different). For now it is more secure to put a few more frames after the good frame. Also, I force the video to come back to the appropriate frame, but it seems that it gives a bit of glitch. </li>
+        <li>Integrate it into existing frameworks like Reveal.js (linear slides) and Impress.js (like Prezi).</li>
         <li>Improve the code (VueJs?) and documentation.</li>
         <li>Add some styling.</li>
         <li>Create a script to export blender marks into frame numbers, and see how to adapt Manim code.</li>
@@ -74,6 +69,7 @@
         <li>Move quickly to a frame number. Add a notion of incremental slide. Maybe not needed if integrated into Reveal.js/Impress.js.</li>
         <li>Check how different it is from <a href="https://inspirejs.org/#media-plugin">InspireJS</a> annotated videos. (just discovered it). See also <a href="https://stackoverflow.com/questions/34017397/how-to-do-video-annotations-using-javascript">this answer</a>.</li>
         <li>Integrate with youtube videos. Maybe using <a href="https://videojs.com/city">VideoJS</a>.</li>
+        <li></li>
       </ul>
     </main>
     <script src="https://rawgit.com/allensarkisyan/VideoFrame/master/VideoFrame.min.js"></script>
@@ -90,11 +86,11 @@
           frameRate: 24,
           callback: function(curr_frame) {
               // Stops the video when arriving on a frames to stop at.
-              if (stopFrames.includes(curr_frame+1)) {
+              if (stopFrames.includes(curr_frame)) {
                   console.log("Automatic stop: found stop frame.");
                   pauseMyVideo();
                   // Ensure we are on the proper frame.
-                  video.seekTo({frame: curr_frame+1});
+                  video.seekTo({frame: curr_frame});
               }
           }
       });
@@ -106,17 +102,10 @@
       }
 
       function playMyVideo() {
-          // Checks if we will stop after playing a single frame (risks to miss it)
-          var curr_frame = video.get();
-          if (stopFrames.includes(curr_frame+1)) {
-              video.seekTo({frame: curr_frame+1})
-              $("#play-pause").html('Play');
-          } else {
-              // video.seekForward(1); // Go forward one frame to ensure it does not get blocked directly.
-              video.listen('frame');
-              video.video.play();
-              $("#play-pause").html('Pause');
-          }
+          video.seekForward(1); // Go forward one frame to ensure it does not get blocked directly.
+          video.listen('frame');
+          video.video.play();
+          $("#play-pause").html('Pause');
       }
 
       // Plays/Pause the video (it will automatically stop on stop frames)
@@ -149,14 +138,6 @@
       });
       document.getElementById("control-end").addEventListener("click", event => {
           video.seekTo(getConfigLastFrame());
-      });
-      document.addEventListener('keydown', event => {
-          if (event.code === 'Home') {
-              restartMyVideo();
-          }
-          if (event.code === 'End') {
-              video.seekTo(getConfigLastFrame());
-          }
       });
 
       function findPreviousCurrentNextStops() {
@@ -296,7 +277,7 @@
               logFrame();
           }
       });
-      document.getElementById("log-current-frame").addEventListener("click", event => {
+      document.getElementById("next-frame").addEventListener("click", event => {
           logFrame();
       });
 
@@ -308,13 +289,6 @@
               } else {
                   video.video.setAttribute("controls","controls")   
               }
-          }
-      });
-      document.getElementById("toggle-controls").addEventListener("click", event => {
-          if (video.video.hasAttribute("controls")) {
-              video.video.removeAttribute("controls")   
-          } else {
-              video.video.setAttribute("controls","controls")   
           }
       });
 

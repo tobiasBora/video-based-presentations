@@ -174,7 +174,6 @@
             
             seekToFrame(frame) { // The +0.00001 seems to be useful to avoid missing the frame.
                 this.pause();
-                console.log(frame);
                 this.video.currentTime = (frame / this.framerate) + 0.00001;
             }
 
@@ -218,7 +217,6 @@
         }
 
         function playMyVideo() {
-            console.log("Let's play my video");
             video.seekForward(1);
             video.playUntilFrameIn(stopFrames);
         }
@@ -258,7 +256,6 @@
         // that you can seekTo(...).
         function findPreviousCurrentNextStops() {
             var curr_frame = video.getCurrentFrame();
-            console.log(curr_frame);
             var numberStops = stopFrames.length;
             var previousFrame = 0; // Starts from the first frame
             for (var i = 0; i < numberStops; i++) {
@@ -271,7 +268,6 @@
                                 (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
                                 video.getLastFrame()];
                     } else {
-                        console.log("bla");
                         return [previousFrame,
                                 // Special case if in between two stops.
                                 (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
@@ -296,15 +292,11 @@
         // Goes to the next slide. If the current slide has not yet finished playing,
         // it directly goes to the end of the current animation.
         function nextSlide() {
-            console.log("Pressed next.");
             if (video.paused()) {
-                console.log("I'll play.");
                 playMyVideo();
             } else {
-                console.log("I'll stop.");
                 // Go to the next
                 var prevCurrNext = findPreviousCurrentNextStops();
-                console.log(prevCurrNext);
                 video.seekToFrame(prevCurrNext[2]);
                 // Stops
                 pauseMyVideo();
@@ -312,11 +304,9 @@
         }
         // Go quickly to next slide without the animation.
         function quickNextSlide() {
-            console.log("Pressed quick next.");
             // Stops
             pauseMyVideo();
             var prevCurrNext = findPreviousCurrentNextStops();
-            console.log(prevCurrNext);
             video.seekToFrame(prevCurrNext[2]);
         }
         document.getElementById("next-slide").addEventListener("click", event => {
@@ -347,12 +337,10 @@
         
         // Goes to the previous slide.
         function previousSlide() {
-            console.log("I'll go to the previous slide.");
             // Stops
             pauseMyVideo();
             // Go to next slide.
             var prevCurrNext = findPreviousCurrentNextStops();
-            console.log(prevCurrNext);
             video.seekToFrame(prevCurrNext[0]);
         }
 

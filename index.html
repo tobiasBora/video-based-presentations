@@ -59,7 +59,7 @@
         Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it may go too far for one or two frames before coming back to the good slide. I try to avoid that by stopping a bit before, creating sometimes a small freeze (too avoid this issue, add a second identical slides right before the stop), but I can't guarantee that this will never fail: this problem seems hard to avoid as I asked <a href="https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop">here</a>, except maybe by cutting the video beforehand (this needs to be tested, I had bad experience with this method in the past). Note that I added a code to properly handles stops that are on consecutive frames (useful when there is no wanted transition), so this should not be too much of a problem.
       </p>
       <h2>Documentation</h2>
-      <p>Download the html file (for instance via <code>File > Save</code> or <code>Ctrl-S</code> or directly using <a href="https://github.com/tobiasBora/video-based-presentations">Github</a>) in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 24 frames per seconds, you may also need to change the line <code>frameRate: 24,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
+      <p>Download the html file (for instance via <code>File > Save</code> or <code>Ctrl-S</code> or directly using <a href="https://github.com/tobiasBora/video-based-presentations">Github</a>) in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 25 frames per seconds, you may also need to change the line <code>frameRate: 25,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
       <p>Then, just reload this file and click on the above button. To see the documentation and shortcuts, hover the mouse on the buttons.</p>
       <h2>Ideas to Improve</h2>
       <ul>
@@ -87,7 +87,7 @@
 
       var video = VideoFrame({
           id: 'video',
-          frameRate: 24,
+          frameRate: 25,
           callback: function(curr_frame) {
               // Stops the video when arriving on a frames to stop at.
               if (stopFrames.includes(curr_frame+1)) {

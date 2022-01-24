@@ -55,7 +55,7 @@
       <p>Warning: this page is to demonstrate the bug mentionned in <a href="https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop">this thread</a> (let me know if you know how to solve it). So far, you should rather use <a href="index.html">this page</a>, even if it has a mini-freeze sometimes before stopping the slide.</p>
       <p>Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables. Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it can go too far for one or two frames before coming back to the good slide.</p>
       <h2>Documentation</h2>
-      <p>Download the html file in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 24 frames per seconds, you may also need to change the line <code>frameRate: 24,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
+      <p>Download the html file in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 25 frames per seconds, you may also need to change the line <code>frameRate: 25,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 90, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
       <p>Then, just reload this file and click on the above button. To see the documentation and shortcuts, hover the mouse on the buttons.</p>
       <h2>Ideas to Improve</h2>
       <ul>
@@ -84,7 +84,7 @@
 
       var video = VideoFrame({
           id: 'video',
-          frameRate: 24,
+          frameRate: 25,
           callback: function(curr_frame) {
               // Stops the video when arriving on a frames to stop at.
               if (stopFrames.includes(curr_frame)) {

@@ -153,7 +153,7 @@
               // Practical to check:
               /* console.log(currentFrame); */
               if (frameList.includes(currentFrame)) {
-                this.pause();
+                this._pause();
                 this.seekToFrame(currentFrame); // Be sure to be on the right frame.
               } else {
                 this.requestId = this.video.requestVideoFrameCallback(callback);
@@ -172,8 +172,8 @@
           else { // requestVideoFrameCallback not supported (e.g. Firefox)
             let callback = (timestamp) => {
               if (frameList.includes(this.getCurrentFrame()+1)) { // We check a bit ahead to avoid issues.
-                this.pause();
-                this.seekToFrame(this.getCurrentFrame()+1); // Be sure to be on the right frame.
+                this._pause();
+                this.seekToFrame(this.getCurrentFrame()+1); // Pauses, and be sure to be on the right frame.
               } else {
                 this.requestId = window.requestAnimationFrame(callback);
               }
@@ -189,34 +189,34 @@
           }
         }
 
-        timeToFrame(time) { 
+        timeToFrame(time,infoError=true) { 
           let notRoundedFrame = time * this.framerate;
           // I got issues with Math.floor, which was used in other libraries. When manually computing the
           // times it can sometimes give 63.99 instead of 64 for the frame number.
           let roundedFrame = Math.round(notRoundedFrame);
-          if(Math.abs(roundedFrame - notRoundedFrame) > 0.05) {
-            this._reportError("WARNING: the current position in time is far (>5 percents) to fall on a frame integer. Check if you have your framerate correct! Not rounded frame is " + notRoundedFrame)
+          if(infoError && Math.abs(roundedFrame - notRoundedFrame) > 0.1) {
+            this._reportError("WARNING: the current position in time is far (>10 percents) to fall on a frame integer. Check if you have your framerate correct (this is really important, or you will likely miss frames), and avoid to try to add stop frames while playing as it may not be really precise. Not rounded frame is " + notRoundedFrame + " the time was " + time + " and the framerate is " + this.framerate)
           }
           return roundedFrame
         }
 
         // Get the current frame number
-        getCurrentFrame() {
+        getCurrentFrame(infoError=true) {
           // Warning: when playing, this may not be frame accurate as it could be synced with the sound.
           // See our solution above.
-          return this.timeToFrame(this.video.currentTime)
+          return this.timeToFrame(this.video.currentTime, infoError)
         }
 
         getLastFrame() {
           return this.timeToFrame(this.video.duration);
         }
         
-        seekToFrame(frame) { // The +0.00001 seems to be useful to avoid missing the frame.
-          this.pause();
+        seekToFrame(frame,) { // The +0.00001 seems to be useful to avoid missing the frame.
+          this._pause();
           this.video.currentTime = (frame / this.framerate) + 0.00001;
         }
 
-        pause() {
+        _pause() {
           // Chromium gives me errors if I don't test this
           // https://stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
           var isPlaying = this.video.currentTime > 0 && !this.video.paused && !this.video.ended 
@@ -225,6 +225,20 @@
             this.video.pause();
             this._stopListen();
           }
+        }
+
+        // When the user manually stops the video, the reported time may be in between two frames. We round it here
+        // to ensure it is one the good frame.
+        ensureNotBetweenFrame() {
+          let currentFrame = this.getCurrentFrame(false)
+          this.seekToFrame(currentFrame)
+        }
+
+        // When the user pauses manually, we usually get times which are wrong.
+        // So we don't display any error, and make sure we are between two frames then.
+        pause(infoError=false) {
+          this._pause();
+          this.ensureNotBetweenFrame();
         }
         
         playUntilFrameIn(frameList) {
@@ -240,7 +254,6 @@
 
         seekForward(n=1) {
           let frame = this.getCurrentFrame();
-          console.log("current frame: " + frame);
           this.seekToFrame(frame+n)
         }
 
@@ -276,8 +289,8 @@
         // the previous/last stop will be equal to the start/end of video.
         // The output is an array of size 3, previous/current/next, with objects like {}
         // that you can seekToFrame(...).
-        findPreviousCurrentNextStops() {
-          var curr_frame = video.getCurrentFrame();
+        findPreviousCurrentNextStops(infoError=true) {
+          var curr_frame = video.getCurrentFrame(infoError);
           var numberStops = this.stopFrames.length;
           var previousFrame = 0; // Starts from the first frame
           for (var i = 0; i < numberStops; i++) {
@@ -372,7 +385,9 @@
           video.playUntilStop();
         } else {
           // Go to the next
-          var prevCurrNext = video.findPreviousCurrentNextStops();
+          // When pressing next while playing, the reported time is not always frame accurate (before rounding
+          // we may get frame 50.46). So no need to display an error in that case.
+          var prevCurrNext = video.findPreviousCurrentNextStops(false);
           video.seekToFrame(prevCurrNext[2]);
           // Stops
           pauseMyVideo();

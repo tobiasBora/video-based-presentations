@@ -1,0 +1,434 @@
+<!-- Quick and dirty proof of concept that video stop on frames is possible! -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Stop video at frame</title>
+    <meta charset="utf-8" />
+
+    <style type="text/css" media="screen">
+      #container-video {
+          background-color:black;
+          padding:0px;
+          margin:0px;
+          width:100%;
+          text-align:center;
+      }
+      #container-video video {
+          width: 50%;
+      }
+      #container-video:fullscreen {
+          width:100%;
+          height:100%;
+      }
+      #container-video:fullscreen video {
+          height:100%;
+          width:100%;
+          object-fit: contain;
+      }
+    </style>
+
+  </head>
+  <body style="padding:0px;margin:0px;">
+
+    <div id="container-video">
+      <video id="video"> 
+        <!-- <source src="http://www.w3schools.com/html/mov_bbb.mp4"></source> -->
+        <!-- <source src="mov_bbb_frames.mp4"></video> -->
+        <!-- <source src="video.mp4"></source> -->
+        <source src="030_Alice_veut_ordi.mp4"></video>
+      </video>
+    </div>
+    
+    <div id="controls" style="text-align:center;margin:10pt;">
+      <button id="control-restart" title="Shortcut Home: Restart the video.">Restart</button>
+      <button id="previous-slide" title="Shortcut Left: Goes to previous slide without playing the animation backward (Anyway, hard to play backward without re-encoding the video).">Previous</button>
+      <button id="next-slide" style="background-color:#00DD55;" title="Shortcut Right: Go to next slide, playing the animation. Pressing twice directly goes to the end of the animation. See Also 'Quick Next'.">Next</button>
+      <button id="play-pause" title="Shortcut P: Like Next, but pressing while playing pauses the video instead of going to the next slide." style="min-width: 4em;">Play</button>
+      <button id="quick-next-slide" title="Shorcut Shift+right: Go to the next slide without playing the animation">Quick Next</button>
+      <button id="control-end" title="Shortcut (Shift+)End: Go to the end of the presentation. Adding Shift may be useful if your browser also goes to the end of the page while pressing End.">End</button>
+      <button id="fullscreen-button" title="Shortcut F: Put the video in fullscreen (quit with Escape).">Fullscreen</button>
+      <button id="toggle-controls" title="Shortcut C: Toggle the controls of the video. WARNING: clicking on play in this mode will not pause the video automatically, except the first time if it was already playing.">Toggle Controls</button>
+      <button id="log-current-frame" title="Shortcut L: Log the current frame number in the console (see with F12 in Firefox).">Log Current Frame</button>
+      <button id="previous-frame" title="Shortcut B (Backward, sorry P is already used): Go to next frame. Practical to log frames.">Previous Frame</button>
+      <button id="next-frame" title="Shortcut N (Next): Go to next frame. Practical to log frames.">Next Frame</button>
+    </div>
+    <main style="margin: 30pt;">
+      <h1>Video-Based Presentation</h1>
+      <p>
+        Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables.
+      </p>
+      <p>
+        Note that this project is extremely young and not very mature, so use it at your own risks. Notably, it may go too far for one or two frames before coming back to the good slide. I try to avoid that by stopping a bit before, creating sometimes a small freeze (too avoid this issue, add a second identical slides right before the stop), but I can't guarantee that this will never fail: this problem seems hard to avoid as I asked <a href="https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop">here</a>, except maybe by cutting the video beforehand (this needs to be tested, I had bad experience with this method in the past). Note that I added a code to properly handles stops that are on consecutive frames (useful when there is no wanted transition), so this should not be too much of a problem.
+      </p>
+      <p>For reference, the stop frames of the current video are <span id="stop-frames"></span>.</p>
+      <h2>Documentation</h2>
+      <p>Download the html file (for instance via <code>File > Save</code> or <code>Ctrl-S</code> or directly using <a href="https://github.com/tobiasBora/video-based-presentations">Github</a>) in the folder of your video, rename your MP4 video into <code>video.mp4</code> (you can also edit the name/format in the html source), if your video is not 25 frames per seconds (can be checked using Ctrl-J in VLC), you may also need to change the line <code>framerate: 25,</code>, and edit the following line in your html: <code>var stopFrames = [30, 60, 94, 132];</code> in order to list the frames at which the program should stop. To find the frame numbers, either use your own softwares (you may export Blender markers for instance) or use the Log function provided in this project (hover the mouse to get documentation).</p>
+      <p>Then, just reload this file and click on the above button. To see the documentation and shortcuts, hover the mouse on the buttons.</p>
+      <h2>Ideas to Improve</h2>
+      <ul>
+        <li>Check if reliability of frame-precise stop can be improved to avoid small freeze right before stopping.</li>
+        <li>Integrate it into existing frameworks like Reveal.js (linear slides) and Impress.js (like Prezi). Notably, could be useful to have slides with multiple videos and normal html slides containing math, javascript diagrams…</li>
+        <li>Improve the code (VueJs?) and documentation.</li>
+        <li>Add some styling.</li>
+        <li>Create a script to export blender marks into frame numbers, and see how to adapt Manim code.</li>
+        <li>Allow the user to specify the </li>
+        <li>Map the shortcut only to the video in fullscreen, so that one can embed multiple presentations in a single page. Maybe provide a way to define a default presentation.</li>
+        <li>Export to PDF the last slides using <a href="https://github.com/astefanutti/decktape">decktape</a> and my function <code>quickNextSlide</code>.</li>
+        <li>Move quickly to a frame number. Add a notion of incremental slide. Maybe not needed if integrated into Reveal.js/Impress.js.</li>
+        <li>Check how different it is from <a href="https://inspirejs.org/#media-plugin">InspireJS</a> annotated videos. (just discovered it). See also <a href="https://stackoverflow.com/questions/34017397/how-to-do-video-annotations-using-javascript">this answer</a>.</li>
+        <li>Integrate with youtube videos. Maybe using <a href="https://videojs.com/city">VideoJS</a>.</li>
+      </ul>
+    </main>
+    <script src="https://rawgit.com/allensarkisyan/VideoFrame/master/VideoFrame.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      // stopframes should be sorted.
+      // =============================
+      // Edit the next line to fit your needs. This is the number of the frames to stop at.
+      // =============================
+      var stopFrames = [30, 60, 94, 132];
+      document.getElementById('stop-frames').innerHTML = stopFrames;
+
+      // Try to mimick https://github.com/allensarkisyan/VideoFrame but using the more precise
+      // function requestAnimationFrame rather than setInterval
+      class FramePreciseVideo {
+        // new FramePreciseVideo({videoId: "video", framerate: 25})
+        constructor(videoObject) {
+          this.video = document.getElementById(videoObject.videoId);
+          this.framerate = videoObject.framerate;
+          this.requestId = null; // Will store the requestAnimationFrame ID to cancel it if needed
+          this.canRequestVideoFrameCallback = true;
+          if (!("requestVideoFrameCallback" in HTMLVideoElement.prototype)) {
+            this.canRequestVideoFrameCallback = false;
+            alert(
+              "Your browser does not support the `Video.requestVideoFrameCallback()` API. We will use instead a less reliable method that may introduce a tiny lag before stopping the video."
+            ); */
+          }
+        }
+
+        
+        _stopListen() {
+          if(this.requestId) {
+            if(this.canRequestVideoFrameCallback) {
+              this.video.cancelVideoFrameCallback(this.requestID);
+            } else {
+              window.cancelAnimationFrame(this.requestID);
+            }
+            this.requestId = null;
+          }
+        }
+
+        _listen(frameList) {
+          // requestVideoFrameCallback supported (e.g. Chromium)
+          if(this.canRequestVideoFrameCallback) {
+            let callback = (now, metadata) => {
+              // See also "presentedFrames" as used in
+              // https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop
+              let currentFrame = Math.floor(metadata.mediaTime.toFixed(5) * this.framerate);
+              if (frameList.includes(currentFrame)) {
+                this.pause();
+                this.seekToFrame(currentFrame); // Be sure to be on the right frame.
+              } else {
+                this.requestId = this.video.requestVideoFrameCallback(callback);
+              }
+            };
+            this.requestId = this.video.requestVideoFrameCallback(callback);
+            this.video.play().then(() => {
+              // It plays :D
+            }).catch((error) => {
+              // An error occured.
+              window.cancelAnimationFrame(this.requestId);
+              alert("ERROR: The video could not play. Make sure you clicked once on the window to grab the necessary authorizations.\n" + error);
+            });
+          }
+          else { // requestVideoFrameCallback not supported (e.g. Firefox)
+            let callback = (timestamp) => {
+              if (frameList.includes(this.getCurrentFrame()+1)) { // We check a bit ahead to avoid issues.
+                this.pause();
+                this.seekToFrame(this.getCurrentFrame()+1); // Be sure to be on the right frame.
+              } else {
+                this.requestId = window.requestAnimationFrame(callback);
+              }
+            };
+            this.requestId = window.requestAnimationFrame(callback);
+            this.video.play().then(() => {
+              // It plays :D
+            }).catch((error) => {
+              // An error occured.
+              window.cancelAnimationFrame(this.requestId);
+              alert("ERROR: The video could not play. Make sure you clicked once on the window to grab the necessary authorizations.\n" + error);
+            });
+          }
+        }
+        
+        // Get the current frame number
+        getCurrentFrame() {
+          return Math.floor(this.video.currentTime.toFixed(5) * this.framerate)
+        }
+
+        timeToFrame(time) {
+          return Math.floor(time.toFixed(5) * this.framerate)
+        }
+
+        getLastFrame() {
+          return this.timeToFrame(this.video.duration);
+        }
+        
+        seekToFrame(frame) { // The +0.00001 seems to be useful to avoid missing the frame.
+          this.pause();
+          this.video.currentTime = (frame / this.framerate) + 0.00001;
+        }
+
+        pause() {
+          this.video.pause();
+          this._stopListen();
+        }
+        
+        playUntilFrameIn(frameList) {
+          this._stopListen();
+          let currentFrame = this.getCurrentFrame();
+          // If we go to the next frame
+          if(frameList.includes(currentFrame + 1)) {
+            this.seekToFrame(currentFrame + 1);
+          } else {
+            this._listen(frameList);
+          }
+        }
+
+        seekForward(n=1) {
+          let frame = this.getCurrentFrame();
+          this.seekToFrame(frame+n)
+        }
+
+        seekBackward(n=1) {
+          let frame = this.getCurrentFrame();
+          let newFrame = frame-n;
+          this.seekToFrame(newFrame >= 0? newFrame : 0)
+        }
+
+        paused() {
+          return this.video.paused
+        }
+      }
+      
+      var video = new FramePreciseVideo({videoId: 'video', framerate: 25});
+      
+      function pauseMyVideo() {
+        video.pause();
+        $("#play-pause").html('Play');
+      }
+
+      function playMyVideo() {
+        video.seekForward(1);
+        video.playUntilFrameIn(stopFrames);
+      }
+
+      // Plays/Pause the video (it will automatically stop on stop frames)
+      function togglePlay() {
+        if (video.paused()) {
+          playMyVideo();
+        } else {
+          pauseMyVideo();
+        }
+      }
+
+      function restartMyVideo() {
+        pauseMyVideo();
+        video.seekToFrame(0);
+      }
+      document.getElementById("control-restart").addEventListener("click", event => {
+        restartMyVideo();
+      });
+      document.getElementById("control-end").addEventListener("click", event => {
+        video.seekTo(getConfigLastFrame());
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'Home') {
+          restartMyVideo();
+        }
+        if (event.code === 'End') {
+          video.seekToFrame(video.getLastFrame());
+        }
+      });
+
+      // Finds the previous, current and next stops. If we are in between two stops, the current stop is
+      // equals to the same as the previous. If we are on the previous or last stop,
+      // the previous/last stop will be equal to the start/end of video.
+      // The output is an array of size 3, previous/current/next, with objects like {}
+      // that you can seekTo(...).
+      function findPreviousCurrentNextStops() {
+        var curr_frame = video.getCurrentFrame();
+        var numberStops = stopFrames.length;
+        var previousFrame = 0; // Starts from the first frame
+        for (var i = 0; i < numberStops; i++) {
+          // If we are on the current stop
+          if(stopFrames[i] >= curr_frame) {
+            // If we are right before the end
+            if (i == numberStops - 1) {
+              return [previousFrame,
+                      // Special case if in between two stops.
+                      (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
+                      video.getLastFrame()];
+            } else {
+              return [previousFrame,
+                      // Special case if in between two stops.
+                      (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
+                      (stopFrames[i] == curr_frame) ? stopFrames[i+1] : stopFrames[i]];
+            }
+          }
+          // Update the previous frame since we know we are after it.
+          previousFrame = stopFrames[i];
+        }
+        // We found no point after us, so let's say the next point is the end.
+        return [previousFrame, previousFrame, video.getLastFrame()]
+      }
+      document.getElementById("play-pause").addEventListener("click", event => {
+        togglePlay();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyP') {
+          togglePlay();
+        }
+      });
+
+      // Goes to the next slide. If the current slide has not yet finished playing,
+      // it directly goes to the end of the current animation.
+      function nextSlide() {
+        if (video.paused()) {
+          playMyVideo();
+        } else {
+          // Go to the next
+          var prevCurrNext = findPreviousCurrentNextStops();
+          video.seekToFrame(prevCurrNext[2]);
+          // Stops
+          pauseMyVideo();
+        }          
+      }
+      // Go quickly to next slide without the animation.
+      function quickNextSlide() {
+        // Stops
+        pauseMyVideo();
+        var prevCurrNext = findPreviousCurrentNextStops();
+        video.seekToFrame(prevCurrNext[2]);
+      }
+      document.getElementById("next-slide").addEventListener("click", event => {
+        nextSlide();
+      });
+      document.getElementById("quick-next-slide").addEventListener("click", event => {
+        quickNextSlide();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'Space') {
+          nextSlide();
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'ArrowRight') {
+          // Shift + "->" goes quickly. "->" plays the animation.
+          if(event.shiftKey) {
+            quickNextSlide();
+          }
+          else {
+            nextSlide();
+          }
+        }
+      });
+      document.getElementById("container-video").addEventListener("click", event => {
+        nextSlide();
+      });
+      
+      // Goes to the previous slide.
+      function previousSlide() {
+        // Stops
+        pauseMyVideo();
+        // Go to next slide.
+        var prevCurrNext = findPreviousCurrentNextStops();
+        video.seekToFrame(prevCurrNext[0]);
+      }
+
+      document.getElementById("previous-slide").addEventListener("click", event => {
+        previousSlide();
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.code === 'ArrowLeft') {
+          previousSlide();
+        }
+      });
+
+      // Fullscreen mode
+      function enableFullscreen() {
+        var elem = document.getElementById("container-video");
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        }
+      }
+      document.getElementById("fullscreen-button").addEventListener("click", event => {
+        enableFullscreen();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyF') {
+          enableFullscreen();
+        }
+      });
+
+      // Debug mode: display frames on pressing 'l'
+      var list_frame_to_log = [];
+      function logFrame() {
+        list_frame_to_log.push(video.getCurrentFrame());
+        console.log("List of registered frames to log: " + list_frame_to_log);
+      }
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyL') {
+          logFrame();
+        }
+      });
+      document.getElementById("log-current-frame").addEventListener("click", event => {
+        logFrame();
+      });
+
+      // Display the controls when pressing C.
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyC') {
+          if (video.video.hasAttribute("controls")) {
+            video.video.removeAttribute("controls")   
+          } else {
+            video.video.setAttribute("controls","controls")   
+          }
+        }
+      });
+      document.getElementById("toggle-controls").addEventListener("click", event => {
+        if (video.video.hasAttribute("controls")) {
+          video.video.removeAttribute("controls")   
+        } else {
+          video.video.setAttribute("controls","controls")   
+        }
+      });
+
+      function previousFrame(){
+        pauseMyVideo();
+        video.seekBackward(1);          
+      }
+      function nextFrame(){
+        pauseMyVideo();
+        video.seekForward(1);          
+      }
+      // Move one frame
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyB') {
+          previousFrame();
+        }
+        if (event.code === 'KeyN') {
+          nextFrame();
+        }
+      });
+      document.getElementById("previous-frame").addEventListener("click", event => {
+        previousFrame();
+      });
+      document.getElementById("next-frame").addEventListener("click", event => {
+        nextFrame();
+      });
+      
+    </script>
+  </body>
+</html>

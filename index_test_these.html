@@ -51,6 +51,16 @@
       <button id="log-current-frame" title="Shortcut L: Log the current frame number in the console (see with F12 in Firefox).">Log Current Frame</button>
       <button id="previous-frame" title="Shortcut B (Backward, sorry P is already used): Go to next frame. Practical to log frames.">Previous Frame</button>
       <button id="next-frame" title="Shortcut N (Next): Go to next frame. Practical to log frames.">Next Frame</button>
+      <button id="enable-edit-frames" title="Allow the edition of frames using the next buttons.">Toggle edit stop frames</button>
+      <br/>
+      <div id="edit-frames-buttons" style="display:none">
+        <button id="display-stopframes" title="Shortcut: D. Display all stop frames.">Display stop frames</button>
+        <button id="clear-stopframes" title="Remove all stop frames. No shortcut as it can be quite dangerous during a presentation.">Clear stop frames</button>
+        <button id="remove-stopframe-here" title="Shortcut: Suppr. Remove stop frame here.">Remove stop frame here</button>
+        <button id="add-stopframe" title="Shortcut: A (add) on french keyboards (Q otherwise). Add a stop frame here.">Add stop frame here</button>
+        <button id="add-stopframe-before" title="Shortcut: Z (close to A on french keyboards). Add a stop frame one frame before the current one.">Add stop frame before</button>
+        <button id="add-stopframe-before-before" title="Shortcut: E (close to E on french keyboards). Add a stop frame two frames before the current frame.">Add stop frame before before</button>
+      </div>
     </div>
     <main style="margin: 30pt;">
       <div id="videoErrors">
@@ -83,25 +93,19 @@
         <li>Integrate with youtube videos. Maybe using <a href="https://videojs.com/city">VideoJS</a>.</li>
       </ul>
     </main>
-    <script src="https://rawgit.com/allensarkisyan/VideoFrame/master/VideoFrame.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script type="text/javascript">
-      // stopframes should be sorted.
-      // =============================
-      // Edit the next line to fit your needs. This is the number of the frames to stop at.
-      // =============================
-      var stopFrames = [30, 60, 94, 132];
-      document.getElementById('stop-frames').innerHTML = stopFrames;
-
       // Try to mimick https://github.com/allensarkisyan/VideoFrame but using the more precise
       // function requestAnimationFrame rather than setInterval
       class FramePreciseVideo {
         // new FramePreciseVideo({videoId: "video", framerate: 25})
         constructor(videoObject) {
+          // Keep a copy, easier to avoid to copy many items not mean to be changed.
+          this.videoObject = videoObject
           this.video = document.getElementById(videoObject.videoId);
           this.framerate = videoObject.framerate;
           this.requestId = null; // Will store the requestAnimationFrame ID to cancel it if needed
           this.canRequestVideoFrameCallback = true;
+          this.stopFrames = videoObject.stopFrames
           if (!("requestVideoFrameCallback" in HTMLVideoElement.prototype)) {
             this.canRequestVideoFrameCallback = false;
             alert(
@@ -127,7 +131,7 @@
             this.errorObject.innerHTML += error + "<br/>";
           }
         }
-            
+        
         _stopListen() {
           if(this.requestId) {
             if(this.canRequestVideoFrameCallback) {
@@ -143,21 +147,17 @@
           // requestVideoFrameCallback supported (e.g. Chromium)
           if(this.canRequestVideoFrameCallback) {
             let callback = (now, metadata) => {
-              console.log("callback");
               // See also "presentedFrames" as used in
               // https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop
-              let currentFrame = Math.floor(metadata.mediaTime.toFixed(5) * this.framerate);
+              let currentFrame = this.timeToFrame(metadata.mediaTime);
+              // Practical to check:
+              /* console.log(currentFrame); */
               if (frameList.includes(currentFrame)) {
-                console.log("I'll pause");
                 this.pause();
-                console.log("Pause done!");
                 this.seekToFrame(currentFrame); // Be sure to be on the right frame.
-                console.log("I seeked!");
               } else {
-                console.log("I'll call the callback");
                 this.requestId = this.video.requestVideoFrameCallback(callback);
               }
-              console.log("end callback")
             };
             this.requestId = this.video.requestVideoFrameCallback(callback);
             this.video.play().then(() => {
@@ -188,14 +188,23 @@
             });
           }
         }
-        
-        // Get the current frame number
-        getCurrentFrame() {
-          return Math.floor(this.video.currentTime.toFixed(5) * this.framerate)
+
+        timeToFrame(time) { 
+          let notRoundedFrame = time * this.framerate;
+          // I got issues with Math.floor, which was used in other libraries. When manually computing the
+          // times it can sometimes give 63.99 instead of 64 for the frame number.
+          let roundedFrame = Math.round(notRoundedFrame);
+          if(Math.abs(roundedFrame - notRoundedFrame) > 0.05) {
+            this._reportError("WARNING: the current position in time is far (>5 percents) to fall on a frame integer. Check if you have your framerate correct! Not rounded frame is " + notRoundedFrame)
+          }
+          return roundedFrame
         }
 
-        timeToFrame(time) {
-          return Math.floor(time.toFixed(5) * this.framerate)
+        // Get the current frame number
+        getCurrentFrame() {
+          // Warning: when playing, this may not be frame accurate as it could be synced with the sound.
+          // See our solution above.
+          return this.timeToFrame(this.video.currentTime)
         }
 
         getLastFrame() {
@@ -223,7 +232,6 @@
           let currentFrame = this.getCurrentFrame();
           // If we go to the next frame
           if(frameList.includes(currentFrame + 1)) {
-            console.log("We go to the next frame!!!!!!!!!!");
             this.seekToFrame(currentFrame + 1);
           } else {
             this._listen(frameList);
@@ -232,6 +240,7 @@
 
         seekForward(n=1) {
           let frame = this.getCurrentFrame();
+          console.log("current frame: " + frame);
           this.seekToFrame(frame+n)
         }
 
@@ -244,25 +253,85 @@
         paused() {
           return this.video.paused
         }
+
+        // ==========
+        // The functions starting from here build the "slide" functions. You certainly want to use them.
+        // ==========
+        
+        playUntilStop() {
+          let currentFrame = this.getCurrentFrame();
+          this.playUntilFrameIn(this.stopFrames.filter(item => item != currentFrame));
+        }
+
+        gotoEnd() {
+          this.seekToFrame(this.getLastFrame())
+        }
+
+        gotoStart() {
+          this.seekToFrame(0)
+        }
+
+        // Finds the previous, current and next stops. If we are in between two stops, the current stop is
+        // equals to the same as the previous. If we are on the previous or last stop,
+        // the previous/last stop will be equal to the start/end of video.
+        // The output is an array of size 3, previous/current/next, with objects like {}
+        // that you can seekToFrame(...).
+        findPreviousCurrentNextStops() {
+          var curr_frame = video.getCurrentFrame();
+          var numberStops = this.stopFrames.length;
+          var previousFrame = 0; // Starts from the first frame
+          for (var i = 0; i < numberStops; i++) {
+            // If we are on the current stop
+            if(this.stopFrames[i] >= curr_frame) {
+              // If we are right before the end
+              if (i == numberStops - 1) {
+                return [previousFrame,
+                        // Special case if in between two stops.
+                        (this.stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
+                        video.getLastFrame()];
+              } else {
+                return [previousFrame,
+                        // Special case if in between two stops.
+                        (this.stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
+                        (this.stopFrames[i] == curr_frame) ? this.stopFrames[i+1] : this.stopFrames[i]];
+              }
+            }
+            // Update the previous frame since we know we are after it.
+            previousFrame = this.stopFrames[i];
+          }
+          // We found no point after us, so let's say the next point is the end.
+          return [previousFrame, previousFrame, video.getLastFrame()]
+        }
+
       }
       
-      var video = new FramePreciseVideo({videoId: 'video', framerate: 24});
+      var video = new FramePreciseVideo({
+        videoId: 'video',
+        // =============================
+        // Edit the next lines to fit your needs. This is the framerate (important!) and
+        // the number of the frames to stop at (starts at 0).
+        // =============================
+        framerate: 24,
+        stopFrames: [20, 69, 118, 266, 433, 686, 870, 920, 926] // [30, 60, 94, 132],
+        
+      });
       video.setErrorIdDiv("videoErrors");
+
+      // ===============
+      // WARNING: These functions are not in the class because they play with the DOM.
+      // TODO: create a different class for DOM related things.
+      // ===============
       
+
       function pauseMyVideo() {
         video.pause();
-        $("#play-pause").html('Play');
-      }
-
-      function playMyVideo() {
-        let currentFrame = this.video.getCurrentFrame();
-        video.playUntilFrameIn(stopFrames.filter(item => item != currentFrame));
+        document.getElementById("play-pause").innerHTML = 'Play';
       }
 
       // Plays/Pause the video (it will automatically stop on stop frames)
       function togglePlay() {
         if (video.paused()) {
-          playMyVideo();
+          video.playUntilStop();
         } else {
           pauseMyVideo();
         }
@@ -270,54 +339,23 @@
 
       function restartMyVideo() {
         pauseMyVideo();
-        video.seekToFrame(0);
-      }
+        video.gotoStart();
+      }      
       document.getElementById("control-restart").addEventListener("click", event => {
         restartMyVideo();
       });
       document.getElementById("control-end").addEventListener("click", event => {
-        video.seekTo(getConfigLastFrame());
+        video.gotoEnd();
       });
       document.addEventListener('keydown', event => {
         if (event.code === 'Home') {
           restartMyVideo();
         }
         if (event.code === 'End') {
-          video.seekToFrame(video.getLastFrame());
+          video.gotoEnd();
         }
       });
 
-      // Finds the previous, current and next stops. If we are in between two stops, the current stop is
-      // equals to the same as the previous. If we are on the previous or last stop,
-      // the previous/last stop will be equal to the start/end of video.
-      // The output is an array of size 3, previous/current/next, with objects like {}
-      // that you can seekTo(...).
-      function findPreviousCurrentNextStops() {
-        var curr_frame = video.getCurrentFrame();
-        var numberStops = stopFrames.length;
-        var previousFrame = 0; // Starts from the first frame
-        for (var i = 0; i < numberStops; i++) {
-          // If we are on the current stop
-          if(stopFrames[i] >= curr_frame) {
-            // If we are right before the end
-            if (i == numberStops - 1) {
-              return [previousFrame,
-                      // Special case if in between two stops.
-                      (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
-                      video.getLastFrame()];
-            } else {
-              return [previousFrame,
-                      // Special case if in between two stops.
-                      (stopFrames[i] == curr_frame) ? curr_frame : previousFrame,
-                      (stopFrames[i] == curr_frame) ? stopFrames[i+1] : stopFrames[i]];
-            }
-          }
-          // Update the previous frame since we know we are after it.
-          previousFrame = stopFrames[i];
-        }
-        // We found no point after us, so let's say the next point is the end.
-        return [previousFrame, previousFrame, video.getLastFrame()]
-      }
       document.getElementById("play-pause").addEventListener("click", event => {
         togglePlay();
       });
@@ -331,12 +369,10 @@
       // it directly goes to the end of the current animation.
       function nextSlide() {
         if (video.paused()) {
-          console.log("Video is paused, lets play");
-          playMyVideo();
+          video.playUntilStop();
         } else {
-          console.log("Video is playing, lets gooo");
           // Go to the next
-          var prevCurrNext = findPreviousCurrentNextStops();
+          var prevCurrNext = video.findPreviousCurrentNextStops();
           video.seekToFrame(prevCurrNext[2]);
           // Stops
           pauseMyVideo();
@@ -346,7 +382,7 @@
       function quickNextSlide() {
         // Stops
         pauseMyVideo();
-        var prevCurrNext = findPreviousCurrentNextStops();
+        var prevCurrNext = video.findPreviousCurrentNextStops();
         video.seekToFrame(prevCurrNext[2]);
       }
       document.getElementById("next-slide").addEventListener("click", event => {
@@ -380,7 +416,7 @@
         // Stops
         pauseMyVideo();
         // Go to next slide.
-        var prevCurrNext = findPreviousCurrentNextStops();
+        var prevCurrNext = video.findPreviousCurrentNextStops();
         video.seekToFrame(prevCurrNext[0]);
       }
 
@@ -466,7 +502,100 @@
       document.getElementById("next-frame").addEventListener("click", event => {
         nextFrame();
       });
+
+      // ====================
+      // Edit frames
+      // ====================
       
+      editFrames = false;
+      function _enableEditFrames() {
+        editFrames = true;
+        document.getElementById('edit-frames-buttons').style.display = 'block'
+      }
+      function _disableEditFrames() {
+        editFrames = false;
+        document.getElementById('edit-frames-buttons').style.display = 'none'
+      }
+      function _toggleEditFrames() {
+        if(editFrames) {
+          _disableEditFrames()
+        } else {
+          _enableEditFrames()
+        }
+      }
+      document.getElementById("enable-edit-frames").addEventListener("click", event => {
+        _toggleEditFrames();
+      });
+
+      function refreshStopFrames() {
+        document.getElementById('stop-frames').innerHTML = video.stopFrames;
+        console.log(video.stopFrames)
+      }
+      refreshStopFrames()
+
+      document.getElementById("display-stopframes").addEventListener("click", event => {
+        refreshStopFrames();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyD') {
+          removeStopframeHere();
+        }
+      });
+
+      document.getElementById("clear-stopframes").addEventListener("click", event => {
+        video.stopFrames = [];
+        refreshStopFrames();
+      });
+
+      function removeStopframeHere(){
+        let currentFrame = video.getCurrentFrame();
+        video.stopFrames = video.stopFrames.filter(item => item != currentFrame);
+        refreshStopFrames();
+      }
+      document.getElementById("remove-stopframe-here").addEventListener("click", event => {
+        removeStopframeHere()
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'Delete') {
+          removeStopframeHere();
+        }
+      });
+
+      function addStopframeDelta(delta) {
+        let currentFrame = video.getCurrentFrame();
+        // Mostly for the user to sort + unique
+        video.stopFrames = ([...new Set(video.stopFrames.concat(currentFrame + delta))])
+        // Need to specify function, as it compares the string otherwise...
+        video.stopFrames.sort(function(a,b){return a - b})
+        refreshStopFrames();
+      }
+      document.getElementById("add-stopframe").addEventListener("click", event => {
+        addStopframeDelta(0)
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyQ') { // It seems that the code matches the QWERTY notation...
+          addStopframeDelta(0)
+        }
+      });
+
+      document.getElementById("add-stopframe-before").addEventListener("click", event => {
+        addStopframeDelta(-1)
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyW') {
+          addStopframeDelta(-1)
+        }
+      });
+
+      document.getElementById("add-stopframe-before-before").addEventListener("click", event => {
+        addStopframeDelta(-2)
+      });
+      document.addEventListener('keydown', event => {
+        if (event.code === 'KeyE') {
+          addStopframeDelta(-2)
+        }
+      });
+
     </script>
   </body>
 </html>

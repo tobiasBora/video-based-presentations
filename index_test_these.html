@@ -53,6 +53,10 @@
       <button id="next-frame" title="Shortcut N (Next): Go to next frame. Practical to log frames.">Next Frame</button>
     </div>
     <main style="margin: 30pt;">
+      <div id="videoErrors">
+        <b>Potential errors will be listed here:</b><br/>
+      </div>
+      
       <h1>Video-Based Presentation</h1>
       <p>
         Using this mini-project, you can play a video and automatically stop it at some important points. It allows me to design my slides using Blender (a very complete 3D editor), for instance to get nicer animations that what is possible in existing softwares (yea, try to do complex animations in Beamer...), but you could use it for any kind of video (including the ones generated using Manim for instance). To run it, you just need a modern browser (I've tested it only in Firefox and Chromium). In case you are affraid the computer you will use won't, you may like Portable executables.
@@ -102,11 +106,28 @@
             this.canRequestVideoFrameCallback = false;
             alert(
               "Your browser does not support the `Video.requestVideoFrameCallback()` API. We will use instead a less reliable method that may introduce a tiny lag before stopping the video."
-            ); */
+            );
           }
+          this.errorObject = null;
         }
 
+
+        // User can call this to redirect the errors on some parts of the HTML
+        setErrorIdDiv(idErrorBlock) {
+          this.errorObject = document.getElementById(idErrorBlock);
+        }
         
+        // Avoid alert not to disturb the user in case the error is not
+        // extremely important (sometimes, an error could be cause for
+        // many different reasons, and I don't know why but on Chromium
+        // I get an error for no reasons because I call stop while playing...)
+        _reportError(error) {
+          console.log(error);
+          if(this.errorObject){
+            this.errorObject.innerHTML += error + "<br/>";
+          }
+        }
+            
         _stopListen() {
           if(this.requestId) {
             if(this.canRequestVideoFrameCallback) {
@@ -122,15 +143,21 @@
           // requestVideoFrameCallback supported (e.g. Chromium)
           if(this.canRequestVideoFrameCallback) {
             let callback = (now, metadata) => {
+              console.log("callback");
               // See also "presentedFrames" as used in
               // https://stackoverflow.com/questions/70613008/javascript-frame-precise-video-stop
               let currentFrame = Math.floor(metadata.mediaTime.toFixed(5) * this.framerate);
               if (frameList.includes(currentFrame)) {
+                console.log("I'll pause");
                 this.pause();
+                console.log("Pause done!");
                 this.seekToFrame(currentFrame); // Be sure to be on the right frame.
+                console.log("I seeked!");
               } else {
+                console.log("I'll call the callback");
                 this.requestId = this.video.requestVideoFrameCallback(callback);
               }
+              console.log("end callback")
             };
             this.requestId = this.video.requestVideoFrameCallback(callback);
             this.video.play().then(() => {
@@ -138,7 +165,8 @@
             }).catch((error) => {
               // An error occured.
               window.cancelAnimationFrame(this.requestId);
-              alert("ERROR: The video could not play. Make sure you clicked once on the window to grab the necessary authorizations.\n" + error);
+              this
+              this._reportError("ERROR (requestVideoFrameCallback): The video could not play. Make sure you clicked once on the window to grab the necessary authorizations. Details are:" + error);
             });
           }
           else { // requestVideoFrameCallback not supported (e.g. Firefox)
@@ -156,7 +184,7 @@
             }).catch((error) => {
               // An error occured.
               window.cancelAnimationFrame(this.requestId);
-              alert("ERROR: The video could not play. Make sure you clicked once on the window to grab the necessary authorizations.\n" + error);
+              this._reportError("ERROR: The video could not play. Make sure you clicked once on the window to grab the necessary authorizations. Details are:" + error);
             });
           }
         }
@@ -180,8 +208,14 @@
         }
 
         pause() {
-          this.video.pause();
-          this._stopListen();
+          // Chromium gives me errors if I don't test this
+          // https://stackoverflow.com/questions/36803176/how-to-prevent-the-play-request-was-interrupted-by-a-call-to-pause-error
+          var isPlaying = this.video.currentTime > 0 && !this.video.paused && !this.video.ended 
+                       && this.video.readyState > this.video.HAVE_CURRENT_DATA;
+          if(isPlaying) {
+            this.video.pause();
+            this._stopListen();
+          }
         }
         
         playUntilFrameIn(frameList) {
@@ -189,6 +223,7 @@
           let currentFrame = this.getCurrentFrame();
           // If we go to the next frame
           if(frameList.includes(currentFrame + 1)) {
+            console.log("We go to the next frame!!!!!!!!!!");
             this.seekToFrame(currentFrame + 1);
           } else {
             this._listen(frameList);
@@ -211,7 +246,8 @@
         }
       }
       
-      var video = new FramePreciseVideo({videoId: 'video', framerate: 25});
+      var video = new FramePreciseVideo({videoId: 'video', framerate: 24});
+      video.setErrorIdDiv("videoErrors");
       
       function pauseMyVideo() {
         video.pause();
@@ -219,8 +255,8 @@
       }
 
       function playMyVideo() {
-        video.seekForward(1);
-        video.playUntilFrameIn(stopFrames);
+        let currentFrame = this.video.getCurrentFrame();
+        video.playUntilFrameIn(stopFrames.filter(item => item != currentFrame));
       }
 
       // Plays/Pause the video (it will automatically stop on stop frames)
@@ -295,8 +331,10 @@
       // it directly goes to the end of the current animation.
       function nextSlide() {
         if (video.paused()) {
+          console.log("Video is paused, lets play");
           playMyVideo();
         } else {
+          console.log("Video is playing, lets gooo");
           // Go to the next
           var prevCurrNext = findPreviousCurrentNextStops();
           video.seekToFrame(prevCurrNext[2]);
